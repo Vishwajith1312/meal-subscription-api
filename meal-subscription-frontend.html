@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bramble &amp; Bowl — Meal Subscriptions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F3F5EE;
+    --paper: #FBFCF8;
+    --ink: #23291F;
+    --ink-soft: #57604F;
+    --forest: #1E3D2F;
+    --forest-dark: #14291F;
+    --mustard: #D9A441;
+    --mustard-dark: #9C7326;
+    --clay: #B4573A;
+    --rule: #D7DCCB;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Work Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  h1, h2, h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    color: var(--forest-dark);
+    margin: 0 0 .3em;
+  }
+  a { color: inherit; }
+
+  header {
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+  }
+  .header-inner {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 22px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--forest-dark);
+    letter-spacing: -0.01em;
+  }
+  .brand span { color: var(--mustard-dark); }
+  .account-line {
+    font-size: 13px;
+    color: var(--ink-soft);
+    padding-bottom: 4px;
+    text-align: right;
+  }
+  .account-line button {
+    background: none;
+    border: none;
+    color: var(--clay);
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 10px;
+    text-decoration: underline;
+  }
+  nav {
+    max-width: 880px;
+    margin: 16px auto 0;
+    padding: 0 24px;
+    display: flex;
+    gap: 26px;
+  }
+  nav button {
+    background: none;
+    border: none;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink-soft);
+    padding: 10px 0 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  nav button.active {
+    color: var(--forest-dark);
+    border-bottom-color: var(--mustard);
+    font-weight: 500;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .lede {
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin-bottom: 32px;
+  }
+
+  .menu-list { border-top: 1px solid var(--rule); }
+  .menu-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .menu-row .info { flex: 1; }
+  .menu-row h3 { font-size: 19px; margin-bottom: 4px; }
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--forest);
+    background: #E4EBDD;
+    padding: 2px 9px;
+    border-radius: 3px;
+    margin-bottom: 8px;
+  }
+  .desc { color: var(--ink-soft); font-size: 14px; max-width: 52ch; }
+  .price-col {
+    text-align: right;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .price { font-family: 'Fraunces', serif; font-size: 20px; color: var(--forest-dark); }
+  .price small { font-family: 'Work Sans', sans-serif; font-size: 12px; color: var(--ink-soft); }
+
+  button.action {
+    background: var(--forest);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button.action:hover { background: var(--forest-dark); }
+  button.action.secondary {
+    background: none;
+    color: var(--forest-dark);
+    border: 1px solid var(--forest-dark);
+  }
+  button.action.secondary:hover { background: #E4EBDD; }
+  button.action:disabled { opacity: .5; cursor: default; }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 26px;
+    max-width: 420px;
+  }
+  form label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 14px 0 5px;
+  }
+  form label:first-of-type { margin-top: 0; }
+  form input, form select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--rule);
+    background: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  form input:focus, form select:focus { outline: 2px solid var(--mustard); border-color: var(--mustard); }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .checkbox-row input { width: auto; }
+  .checkbox-row label { margin: 0; }
+
+  .msg { font-size: 13.5px; margin-top: 14px; padding: 10px 12px; border-left: 3px solid; }
+  .msg.error { color: #7A2A18; background: #FBEAE4; border-color: var(--clay); }
+  .msg.ok { color: var(--forest-dark); background: #E4EBDD; border-color: var(--forest); }
+
+  .tabs-inline { display: flex; gap: 4px; margin-bottom: 22px; }
+  .tabs-inline button {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .tabs-inline button.active { background: var(--forest); color: #fff; border-color: var(--forest); }
+
+  .sub-card {
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 20px 22px;
+    margin-bottom: 18px;
+  }
+  .sub-card .status {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 9px;
+    border-radius: 3px;
+    text-transform: capitalize;
+  }
+  .status.active { background: #E4EBDD; color: var(--forest); }
+  .status.paused { background: #FBF0DC; color: var(--mustard-dark); }
+  .status.cancelled { background: #FBEAE4; color: var(--clay); }
+  .status.completed { background: #EEE; color: var(--ink-soft); }
+  .delivery-item, .payment-item {
+    font-size: 14px;
+    padding: 8px 0;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+  }
+  .delivery-item .d-status { color: var(--ink-soft); font-size: 12.5px; }
+
+  .empty {
+    color: var(--ink-soft);
+    font-style: italic;
+    padding: 30px 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .review-item {
+    padding: 14px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .review-item .stars { color: var(--mustard-dark); font-size: 14px; }
+  .review-item .who { color: var(--ink-soft); font-size: 12.5px; margin-top: 2px; }
+
+  .server-warning {
+    max-width: 880px;
+    margin: 18px auto 0;
+    padding: 0 24px;
+  }
+  .server-warning .msg { max-width: none; }
+
+  select.plan-select { max-width: 260px; }
+  .subscribe-panel {
+    margin-top: 16px;
+    padding: 18px;
+    background: #EFF3E6;
+    border: 1px dashed var(--rule);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">Bramble <span>&amp;</span> Bowl</div>
+    <div class="account-line" id="accountLine"></div>
+  </div>
+  <nav id="mainNav"></nav>
+</header>
+
+<main id="app"></main>
+
+<div class="server-warning" id="serverWarning" style="display:none">
+  <div class="msg error">Can't reach the API at <code id="apiUrlShown"></code>. Make sure the server is running (<code>npm run dev</code> in the project folder), then reload this page.</div>
+</div>
+
+<script>
+const API = 'http://localhost:4000';
+let state = {
+  token: localStorage.getItem('token') || null,
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  tab: 'plans',
+  plans: [],
+  meals: [],
+  addresses: [],
+  subscriptions: [],
+};
+
+function saveAuth(token, user) {
+  state.token = token;
+  state.user = user;
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+}
+function logout() {
+  state.token = null;
+  state.user = null;
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  state.tab = 'plans';
+  render();
+}
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (state.token) headers.Authorization = 'Bearer ' + state.token;
+  const res = await fetch(API + path, { ...opts, headers });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error((data && data.error) || 'Request failed');
+  return data;
+}
+
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function stars(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+// ---------- NAV ----------
+function renderNav() {
+  const tabs = [
+    ['plans', 'Menu plans'],
+    ['meals', 'Meals & reviews'],
+  ];
+  if (state.token) {
+    tabs.push(['subscriptions', 'My subscriptions']);
+    tabs.push(['addresses', 'Addresses']);
+  }
+  document.getElementById('mainNav').innerHTML = tabs.map(([key, label]) =>
+    `<button class="${state.tab === key ? 'active' : ''}" onclick="setTab('${key}')">${label}</button>`
+  ).join('');
+
+  const acc = document.getElementById('accountLine');
+  if (state.user) {
+    acc.innerHTML = `Signed in as ${state.user.name}<button onclick="logout()">Sign out</button>`;
+  } else {
+    acc.innerHTML = `<button onclick="setTab('auth')" style="color:var(--forest-dark)">Sign in / Register</button>`;
+  }
+}
+
+function setTab(t) { state.tab = t; render(); }
+
+// ---------- PLANS ----------
+async function loadPlans() {
+  state.plans = await api('/api/plans');
+}
+function renderPlans() {
+  return `
+    <h1>This week's plans</h1>
+    <p class="lede">Weekly meal plans, cooked fresh and delivered on schedule. Pick one to start a subscription.</p>
+    <div class="menu-list">
+      ${state.plans.map(p => `
+        <div class="menu-row">
+          <div class="info">
+            <span class="tag">${p.category}</span>
+            <h3>${p.name}</h3>
+            <div class="desc">${p.description || ''} — ${p.meals_per_week} meals / week</div>
+          </div>
+          <div class="price-col">
+            <div class="price">₹${Number(p.price).toFixed(0)}<small> /week</small></div>
+            <button class="action" onclick="startSubscribe(${p.id})">Subscribe</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="subscribePanel"></div>
+  `;
+}
+
+async function startSubscribe(planId) {
+  if (!state.token) { state.tab = 'auth'; state.pendingPlan = planId; render(); return; }
+  if (state.addresses.length === 0) {
+    try { state.addresses = await api('/api/addresses'); } catch (e) {}
+  }
+  const panel = document.getElementById('subscribePanel');
+  const addrOptions = state.addresses.map(a => `<option value="${a.id}">${a.line1}, ${a.city}</option>`).join('')
+    || '<option value="">No saved addresses — add one on the Addresses tab first</option>';
+  panel.innerHTML = `
+    <div class="subscribe-panel">
+      <h3>Confirm subscription</h3>
+      <label>Delivery address</label>
+      <select id="subAddress" class="plan-select">${addrOptions}</select>
+      <label>Start date</label>
+      <input type="date" id="subDate" value="${new Date().toISOString().slice(0,10)}">
+      <div style="margin-top:14px">
+        <button class="action" onclick="confirmSubscribe(${planId})">Confirm subscription</button>
+        <button class="action secondary" onclick="document.getElementById('subscribePanel').innerHTML=''">Cancel</button>
+      </div>
+      <div id="subMsg"></div>
+    </div>
+  `;
+}
+
+async function confirmSubscribe(planId) {
+  const address_id = document.getElementById('subAddress').value;
+  const start_date = document.getElementById('subDate').value;
+  const msg = document.getElementById('subMsg');
+  if (!address_id) { msg.innerHTML = `<div class="msg error">Add a delivery address first.</div>`; return; }
+  try {
+    await api('/api/subscriptions', { method: 'POST', body: JSON.stringify({ plan_id: planId, address_id: Number(address_id), start_date }) });
+    msg.innerHTML = `<div class="msg ok">Subscribed! Check "My subscriptions" for your delivery schedule.</div>`;
+  } catch (e) {
+    msg.innerHTML = `<div class="msg error">${e.message}</div>`;
+  }
+}
+
+// ---------- MEALS & REVIEWS ----------
+async function loadMeals() {
+  state.meals = await api('/api/meals');
+}
+function renderMeals() {
+  return `
+    <h1>Meals</h1>
+    <p class="lede">Individual dishes that make up the weekly plans. Tap a meal to read or leave a review.</p>
+    <div class="menu-list">
+      ${state.meals.map(m => `
+        <div class="menu-row">
+          <div class="info">
+            <span class="tag">${m.meal_type}</span>
+            <h3>${m.name}</h3>
+            <div class="desc">${m.description || ''}${m.calories ? ' — ' + m.calories + ' kcal' : ''}</div>
+          </div>
+          <div class="price-col">
+            <div class="price">₹${Number(m.price).toFixed(0)}</div>
+            <button class="action secondary" onclick="openMeal(${m.id})">Reviews</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="mealPanel"></div>
+  `;
+}
+
+async function openMeal(mealId) {
+  const panel = document.getElementById('mealPanel');
+  panel.innerHTML = '<p class="lede">Loading reviews…</p>';
+  const reviews = await api(`/api/meals/${mealId}/reviews`);
+  const reviewForm = state.token ? `
+    <div class="subscribe-panel">
+      <h3>Leave a review</h3>
+      <label>Rating</label>
+      <select id="revRating">
+        <option value="5">5 — excellent</option>
+        <option value="4">4 — good</option>
+        <option value="3">3 — okay</option>
+        <option value="2">2 — not great</option>
+        <option value="1">1 — poor</option>
+      </select>
+      <label>Comment</label>
+      <input id="revComment" placeholder="What did you think?">
+      <div style="margin-top:14px"><button class="action" onclick="submitReview(${mealId})">Submit review</button></div>
+      <div id="revMsg"></div>
+    </div>
+  ` : `<p class="lede"><a href="#" onclick="setTab('auth');return false;">Sign in</a> to leave a review.</p>`;
+
+  panel.innerHTML = `
+    <h3 style="margin-top:28px">Reviews</h3>
+    ${reviews.length ? reviews.map(r => `
+      <div class="review-item">
+        <div class="stars">${stars(r.rating)}</div>
+        <div>${r.comment || ''}</div>
+        <div class="who">${r.reviewer} — ${fmtDate(r.created_at)}</div>
+      </div>
+    `).join('') : '<p class="empty">No reviews yet.</p>'}
+    ${reviewForm}
+  `;
+}
+
+async function submitReview(mealId) {
+  const rating = Number(document.getElementById('revRating').value);
+  const comment = document.getElementById('revComment').value;
+  const msg = document.getElementById('revMsg');
+  try {
+    await api('/api/reviews', { method: 'POST', body: JSON.stringify({ meal_id: mealId, rating, comment }) });
+    msg.innerHTML = `<div class="msg ok">Thanks for the review!</div>`;
+    openMeal(mealId);
+  } catch (e) {
+    msg.innerHTML = `<div class="msg error">${e.message}</div>`;
+  }
+}
+
+// ---------- SUBSCRIPTIONS ----------
+async function loadSubscriptions() {
+  state.subscriptions = await api('/api/subscriptions');
+}
+async function renderSubscriptions() {
+  if (state.subscriptions.length === 0) {
+    return `<h1>My subscriptions</h1><p class="empty">No subscriptions yet — pick a plan from the Menu plans tab.</p>`;
+  }
+  const details = await Promise.all(state.subscriptions.map(s => api(`/api/subscriptions/${s.id}`)));
+  return `
+    <h1>My subscriptions</h1>
+    ${details.map(d => `
+      <div class="sub-card">
+        <h3>${d.plan_name} <span class="status ${d.status}">${d.status}</span></h3>
+        <div class="desc">Started ${fmtDate(d.start_date)} — ₹${Number(d.plan_price).toFixed(0)} / week</div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          ${d.status === 'active' ? `<button class="action secondary" onclick="setSubStatus(${d.id},'paused')">Pause</button>` : ''}
+          ${d.status === 'paused' ? `<button class="action secondary" onclick="setSubStatus(${d.id},'active')">Resume</button>` : ''}
+          ${d.status !== 'cancelled' ? `<button class="action secondary" onclick="setSubStatus(${d.id},'cancelled')">Cancel</button>` : ''}
+        </div>
+        <h3 style="font-size:15px;margin-top:18px">Deliveries</h3>
+        ${d.deliveries.length ? d.deliveries.map(del => `
+          <div class="delivery-item">
+            <span>${del.meal_name} — ${fmtDate(del.delivery_date)}</span>
+            <span class="d-status">${del.status}</span>
+          </div>
+        `).join('') : '<div class="empty" style="padding:10px 0">No deliveries scheduled.</div>'}
+        <h3 style="font-size:15px;margin-top:18px">Payments</h3>
+        ${d.payments.map(p => `
+          <div class="payment-item"><span>₹${Number(p.amount).toFixed(0)} — ${p.method}</span><span class="d-status">${p.status}</span></div>
+        `).join('')}
+      </div>
+    `).join('')}
+  `;
+}
+
+async function setSubStatus(id, status) {
+  try {
+    await api(`/api/subscriptions/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    await loadSubscriptions();
+    document.getElementById('app').innerHTML = await renderSubscriptions();
+  } catch (e) { alert(e.message); }
+}
+
+// ---------- ADDRESSES ----------
+async function loadAddresses() {
+  state.addresses = await api('/api/addresses');
+}
+function renderAddresses() {
+  return `
+    <h1>Delivery addresses</h1>
+    <div class="menu-list">
+      ${state.addresses.map(a => `
+        <div class="menu-row">
+          <div class="info">
+            <h3>${a.line1}${a.is_default ? ' <span class="tag">default</span>' : ''}</h3>
+            <div class="desc">${a.city}${a.state ? ', ' + a.state : ''} — ${a.zip_code}</div>
+          </div>
+          <div class="price-col">
+            <button class="action secondary" onclick="removeAddress(${a.id})">Remove</button>
+          </div>
+        </div>
+      `).join('')}
+      ${state.addresses.length === 0 ? '<p class="empty">No addresses yet — add one below.</p>' : ''}
+    </div>
+    <div class="card" style="margin-top:26px">
+      <h3>Add an address</h3>
+      <form onsubmit="return addAddress(event)">
+        <label>Address line</label>
+        <input id="addrLine1" required>
+        <label>City</label>
+        <input id="addrCity" required>
+        <label>State</label>
+        <input id="addrState">
+        <label>ZIP / PIN code</label>
+        <input id="addrZip" required>
+        <div class="checkbox-row">
+          <input type="checkbox" id="addrDefault">
+          <label for="addrDefault">Set as default</label>
+        </div>
+        <button class="action" style="margin-top:18px" type="submit">Save address</button>
+        <div id="addrMsg"></div>
+      </form>
+    </div>
+  `;
+}
+async function addAddress(e) {
+  e.preventDefault();
+  const body = {
+    line1: document.getElementById('addrLine1').value,
+    city: document.getElementById('addrCity').value,
+    state: document.getElementById('addrState').value,
+    zip_code: document.getElementById('addrZip').value,
+    is_default: document.getElementById('addrDefault').checked,
+  };
+  try {
+    await api('/api/addresses', { method: 'POST', body: JSON.stringify(body) });
+    await loadAddresses();
+    document.getElementById('app').innerHTML = renderAddresses();
+  } catch (e2) {
+    document.getElementById('addrMsg').innerHTML = `<div class="msg error">${e2.message}</div>`;
+  }
+  return false;
+}
+async function removeAddress(id) {
+  try {
+    await api(`/api/addresses/${id}`, { method: 'DELETE' });
+    await loadAddresses();
+    document.getElementById('app').innerHTML = renderAddresses();
+  } catch (e) { alert(e.message); }
+}
+
+// ---------- AUTH ----------
+function renderAuth() {
+  return `
+    <h1>Sign in</h1>
+    <div class="tabs-inline">
+      <button id="loginTabBtn" class="active" onclick="showAuthForm('login')">Sign in</button>
+      <button id="registerTabBtn" onclick="showAuthForm('register')">Register</button>
+    </div>
+    <div id="authFormWrap"></div>
+  `;
+}
+function showAuthForm(which) {
+  document.getElementById('loginTabBtn').classList.toggle('active', which === 'login');
+  document.getElementById('registerTabBtn').classList.toggle('active', which === 'register');
+  const wrap = document.getElementById('authFormWrap');
+  if (which === 'login') {
+    wrap.innerHTML = `
+      <div class="card">
+        <form onsubmit="return doLogin(event)">
+          <label>Email</label>
+          <input id="loginEmail" type="email" required>
+          <label>Password</label>
+          <input id="loginPassword" type="password" required>
+          <button class="action" style="margin-top:18px" type="submit">Sign in</button>
+          <div id="authMsg"></div>
+        </form>
+      </div>
+    `;
+  } else {
+    wrap.innerHTML = `
+      <div class="card">
+        <form onsubmit="return doRegister(event)">
+          <label>Name</label>
+          <input id="regName" required>
+          <label>Email</label>
+          <input id="regEmail" type="email" required>
+          <label>Phone</label>
+          <input id="regPhone">
+          <label>Password</label>
+          <input id="regPassword" type="password" required minlength="6">
+          <button class="action" style="margin-top:18px" type="submit">Create account</button>
+          <div id="authMsg"></div>
+        </form>
+      </div>
+    `;
+  }
+}
+async function doLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  try {
+    const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    saveAuth(data.token, data.user);
+    state.tab = state.pendingPlan ? 'plans' : 'subscriptions';
+    await render();
+    if (state.pendingPlan) { await startSubscribe(state.pendingPlan); state.pendingPlan = null; }
+  } catch (err) {
+    document.getElementById('authMsg').innerHTML = `<div class="msg error">${err.message}</div>`;
+  }
+  return false;
+}
+async function doRegister(e) {
+  e.preventDefault();
+  const body = {
+    name: document.getElementById('regName').value,
+    email: document.getElementById('regEmail').value,
+    phone: document.getElementById('regPhone').value,
+    password: document.getElementById('regPassword').value,
+  };
+  try {
+    await api('/api/auth/register', { method: 'POST', body: JSON.stringify(body) });
+    const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: body.email, password: body.password }) });
+    saveAuth(data.token, data.user);
+    state.tab = 'subscriptions';
+    render();
+  } catch (err) {
+    document.getElementById('authMsg').innerHTML = `<div class="msg error">${err.message}</div>`;
+  }
+  return false;
+}
+
+// ---------- ROOT RENDER ----------
+async function render() {
+  renderNav();
+  const app = document.getElementById('app');
+  try {
+    if (state.tab === 'plans') {
+      await loadPlans();
+      app.innerHTML = renderPlans();
+    } else if (state.tab === 'meals') {
+      await loadMeals();
+      app.innerHTML = renderMeals();
+    } else if (state.tab === 'subscriptions') {
+      await loadSubscriptions();
+      app.innerHTML = await renderSubscriptions();
+    } else if (state.tab === 'addresses') {
+      await loadAddresses();
+      app.innerHTML = renderAddresses();
+    } else if (state.tab === 'auth') {
+      app.innerHTML = renderAuth();
+      showAuthForm('login');
+    }
+    document.getElementById('serverWarning').style.display = 'none';
+  } catch (err) {
+    document.getElementById('apiUrlShown').textContent = API;
+    document.getElementById('serverWarning').style.display = 'block';
+    app.innerHTML = '';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
