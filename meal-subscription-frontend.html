@@ -254,6 +254,26 @@
     background: #EFF3E6;
     border: 1px dashed var(--rule);
   }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(20,41,31,.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 100;
+  }
+  .modal {
+    background: var(--paper); border: 1px solid var(--rule);
+    padding: 26px; width: 100%; max-width: 420px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal .plan-summary { color: var(--ink-soft); font-size: 14px; margin-bottom: 16px; }
+
+  .modal label { display: block; font-size: 13px; color: var(--ink-soft); margin: 14px 0 5px; }
+  .modal input, .modal select {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--rule);
+    background: #fff; font-family: inherit; font-size: 14px; color: var(--ink);
+  }
+  .modal input:focus, .modal select:focus { outline: 2px solid var(--mustard); border-color: var(--mustard); }
+  .modal .btn-row { margin-top: 18px; display: flex; gap: 8px; }
 </style>
 </head>
 <body>
@@ -365,39 +385,94 @@ function renderPlans() {
   `;
 }
 
+function openModal(html) {
+  closeModal();
+  const root = document.createElement('div');
+  root.id = 'modalRoot';
+  root.className = 'modal-backdrop';
+  root.innerHTML = `<div class="modal">${html}</div>`;
+  root.addEventListener('click', e => { if (e.target === root) closeModal(); });
+  document.body.appendChild(root);
+}
+function closeModal() {
+  const m = document.getElementById('modalRoot');
+  if (m) m.remove();
+}
+
 async function startSubscribe(planId) {
-  if (!state.token) { state.tab = 'auth'; state.pendingPlan = planId; render(); return; }
-  if (state.addresses.length === 0) {
-    try { state.addresses = await api('/api/addresses'); } catch (e) {}
+  if (!state.token) {
+    state.pendingPlan = planId;
+    state.tab = 'auth';
+    render();
+    return;
   }
-  const panel = document.getElementById('subscribePanel');
-  const addrOptions = state.addresses.map(a => `<option value="${a.id}">${a.line1}, ${a.city}</option>`).join('')
-    || '<option value="">No saved addresses — add one on the Addresses tab first</option>';
-  panel.innerHTML = `
-    <div class="subscribe-panel">
-      <h3>Confirm subscription</h3>
-      <label>Delivery address</label>
-      <select id="subAddress" class="plan-select">${addrOptions}</select>
-      <label>Start date</label>
-      <input type="date" id="subDate" value="${new Date().toISOString().slice(0,10)}">
-      <div style="margin-top:14px">
-        <button class="action" onclick="confirmSubscribe(${planId})">Confirm subscription</button>
-        <button class="action secondary" onclick="document.getElementById('subscribePanel').innerHTML=''">Cancel</button>
-      </div>
-      <div id="subMsg"></div>
+  const plan = state.plans.find(p => p.id === planId);
+  try {
+    state.addresses = await api('/api/addresses');
+  } catch (e) {
+    if (/token|authorization/i.test(e.message)) {
+      logout();
+      state.pendingPlan = planId;
+      state.tab = 'auth';
+      render();
+      return;
+    }
+    openModal(`<h3>Couldn't start subscription</h3>
+      <div class="msg error">${e.message}</div>
+      <div class="btn-row"><button class="action secondary" onclick="closeModal()">Close</button></div>`);
+    return;
+  }
+
+  const planName = plan ? plan.name : 'this plan';
+  const planPrice = plan ? `₹${Number(plan.price).toFixed(0)} / week` : '';
+
+  if (state.addresses.length === 0) {
+    openModal(`<h3>Add a delivery address first</h3>
+      <p class="plan-summary">You need at least one saved address before subscribing to ${planName}.</p>
+      <div class="btn-row">
+        <button class="action" onclick="closeModal(); setTab('addresses')">Add an address</button>
+        <button class="action secondary" onclick="closeModal()">Cancel</button>
+      </div>`);
+    return;
+  }
+
+  const addrOptions = state.addresses.map(a =>
+    `<option value="${a.id}" ${a.is_default ? 'selected' : ''}>${a.line1}, ${a.city}</option>`).join('');
+  const today = new Date().toISOString().slice(0, 10);
+
+  openModal(`<h3>Confirm subscription</h3>
+    <p class="plan-summary">${planName} &mdash; ${planPrice}</p>
+    <label>Delivery address</label>
+    <select id="subAddress">${addrOptions}</select>
+    <label>Start date</label>
+    <input type="date" id="subDate" value="${today}" min="${today}">
+    <div class="btn-row">
+      <button class="action" id="subConfirmBtn" onclick="confirmSubscribe(${planId})">Confirm subscription</button>
+      <button class="action secondary" onclick="closeModal()">Cancel</button>
     </div>
-  `;
+    <div id="subMsg"></div>`);
 }
 
 async function confirmSubscribe(planId) {
   const address_id = document.getElementById('subAddress').value;
   const start_date = document.getElementById('subDate').value;
   const msg = document.getElementById('subMsg');
-  if (!address_id) { msg.innerHTML = `<div class="msg error">Add a delivery address first.</div>`; return; }
+  const btn = document.getElementById('subConfirmBtn');
+  if (!start_date) { msg.innerHTML = `<div class="msg error">Pick a start date.</div>`; return; }
+  btn.disabled = true;
   try {
-    await api('/api/subscriptions', { method: 'POST', body: JSON.stringify({ plan_id: planId, address_id: Number(address_id), start_date }) });
-    msg.innerHTML = `<div class="msg ok">Subscribed! Check "My subscriptions" for your delivery schedule.</div>`;
+    await api('/api/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify({ plan_id: planId, address_id: Number(address_id), start_date }),
+    });
+    openModal(`<h3>You're subscribed</h3>
+      <div class="msg ok">Your first deliveries have been scheduled and the payment is recorded.</div>
+      <div class="btn-row">
+        <button class="action" onclick="closeModal(); setTab('subscriptions')">View my subscriptions</button>
+        <button class="action secondary" onclick="closeModal()">Close</button>
+      </div>`);
   } catch (e) {
+    btn.disabled = false;
     msg.innerHTML = `<div class="msg error">${e.message}</div>`;
   }
 }
@@ -485,7 +560,7 @@ async function renderSubscriptions() {
   if (state.subscriptions.length === 0) {
     return `<h1>My subscriptions</h1><p class="empty">No subscriptions yet — pick a plan from the Menu plans tab.</p>`;
   }
-  const details = await Promise.all(state.subscriptions.map(s => api(`/api/subscriptions/${s.id}`)));
+  const details = await Promise.all(state.subscriptions.map(async s => ({ ...s, ...(await api(`/api/subscriptions/${s.id}`)) })));
   return `
     <h1>My subscriptions</h1>
     ${details.map(d => `
